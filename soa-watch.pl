@@ -124,3 +124,8 @@ sub serial {
 	}
 	return '-';
 }
+
+sub usage {
+	printf STDERR "usage: $0 [--server server] [--zone zone] [--sleep secs]\n";
+	exit(1);
+}
