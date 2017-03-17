@@ -12,6 +12,12 @@ my @ZONES;
 my $SCW = 15;	# Serial Column Width
 my $SLEEP = 3;
 
+sub max($$) {
+	$a = shift;
+	$b = shift;
+	$a > $b ? $a : $b;
+}
+
 usage() unless GetOptions (
 	"server=s" => \@SERVERS,
 	"zone=s" => \@ZONES,
@@ -26,7 +32,7 @@ if (@ZONES && !@SERVERS) {
 		next unless $pkt;
 		foreach my $rr ($pkt->answer, $pkt->authority) {
 			next unless 'NS' eq $rr->type;
-			next unless lc($rr->name) eq lc(Net::DNS::Domain->new($z)->name);
+			next unless lc(Net::DNS::Domain->new($rr->name)->name) eq lc(Net::DNS::Domain->new($z)->name);
 			$s->{lc($rr->nsdname)} = 1;
 		}
 	}
@@ -42,8 +48,10 @@ initscr;
 my $win = new Curses;
 while (1) {
 	if (scalar(@ZONES) > scalar(@SERVERS)) {
+		$SCW = max($SCW, $MAXSRVRLEN+2);
 		display1();
 	} else {
+		$SCW = max($SCW, $MAXZONELEN+2);
 		display2();
 	}
 	sleep($SLEEP);
