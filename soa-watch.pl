@@ -18,6 +18,21 @@ usage() unless GetOptions (
 	"sleep=i" => \$SLEEP,
 );
 
+if (@ZONES && !@SERVERS) {
+	my $s;
+	my $res = Net::DNS::Resolver->new;
+	foreach my $z (@ZONES) {
+		my $pkt = $res->send($z, 'NS');
+		next unless $pkt;
+		foreach my $rr ($pkt->answer, $pkt->authority) {
+			next unless 'NS' eq $rr->type;
+			next unless lc($rr->name) eq lc(Net::DNS::Domain->new($z)->name);
+			$s->{lc($rr->nsdname)} = 1;
+		}
+	}
+	@SERVERS = sort keys %$s;
+}
+
 my $MAXZONELEN = 0;
 foreach my $z (@ZONES) { $MAXZONELEN = length($z) if length($z) > $MAXZONELEN; }
 my $MAXSRVRLEN = 0;
